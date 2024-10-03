@@ -11,5 +11,3 @@ thread = threading.Thread(target=print_hello)
 
 # 启动线程
 thread.start()
-
-print("Main thread finished")
