@@ -2,8 +2,7 @@ import requests
 import time
 import socks
 import socket
-import 代理获取 as 下载代理文件
-import 代理获取 as 读取代理信息
+import 代理获取
 
 # 测试HTTP和SOCKS代理的可用性和延迟
 def 测试代理(代理列表, 测试网址='https://httpbin.org/ip', 超时时间=5):
@@ -50,3 +49,5 @@ def 测试代理(代理列表, 测试网址='https://httpbin.org/ip', 超时时�
 # 测试代理可用性
 if __name__=="__main__":
     代理获取.下载代理文件()
+    代理列表=代理获取.读取代理信息()
+    测试代理(代理列表)
