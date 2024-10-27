@@ -32,8 +32,50 @@ def 读取代理信息(文件名):
                         代理列表.append((协议, IP, 端口))
         return 代理列表
     except Exception as e:
-        print(f"读取文件失败，错误: {e}")
+        print(f"读取文件失败1，错误: {e}")
         return []
+
+def 文件读取(文件名):
+    列表 = []
+    try:
+        with open(文件名, 'r') as 文件:
+            for 行 in 文件:
+                行 = 行.strip()
+                协议, 其余部分 = 行.split('://')
+                IP_端口,延迟 = 其余部分.split('---延迟:')
+                IP,端口=IP_端口.split(':')
+                列表.append((协议, IP, 端口))
+        return 列表
+    except Exception as e:
+        print(f"读取文件失败2，错误: {e}")
+        return []
+
+def 完整读取(文件名):
+    列表 = []
+    try:
+        with open(文件名, 'r') as 文件:
+            for 行 in 文件:
+                行 = 行.strip()
+                协议, 其余部分 = 行.split('://')
+                IP_端口,延迟 = 其余部分.split('---延迟:')
+                IP,端口=IP_端口.split(':')
+                列表.append((协议, IP, 端口,延迟))
+        return 列表
+    except Exception as e:
+        print(f"读取文件失败3，错误: {e}")
+        return []
+
+def 去重代理(代理列表):
+    唯一代理列表 = []  # 存储去重后的代理
+    已见IP = set()  # 存储已经见过的IP
+
+    for 代理 in 代理列表:
+        ip = 代理[1]  # 获取代理元组中的IP（假设元组格式为 (协议, ip, 端口, 延迟)）
+        if ip not in 已见IP:
+            已见IP.add(ip)  # 记录已经见过的IP
+            唯一代理列表.append(代理)  # 添加到去重后的列表中
+
+    return 唯一代理列表
 
 #输出代理信息
 if __name__=="__main__":
