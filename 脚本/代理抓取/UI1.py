@@ -5,7 +5,6 @@ import threading
 import time
 import 代理获取
 import 代理测试异步
-import 日志捕获
 import 代理连接
 import sys
 import ctypes
@@ -44,7 +43,7 @@ def 保存代理列表(文件名='代理文件.txt'):
             # 将协议、IP、端口和延迟格式化为字符串
             行 = f"{协议}://{ip}:{端口}---延迟:{延迟}\n"
             文件.write(行)  # 写入文件
-    print("已记录")
+    添加文本("文件已保存")
 
 def 添加文本(内容):
     # 允许文本框修改
@@ -59,19 +58,12 @@ def 添加文本(内容):
     # 禁用文本框，防止手动编辑
     运行文本.config(state="disabled")
 
-def 日志内容():
-    while 1:
-        a,b,c=日志捕获.开始捕获日志()
-        time.sleep(1)
-        i=日志捕获.停止捕获日志(a, b, c)
-        if i:
-            添加文本(f"日志内容：{i}")
-
 def 排序():
     global 代理列表
     代理列表 = sorted(代理列表, key=lambda x: int(x[-1]))
     保存代理列表()
     刷新列表()
+    添加文本("..已重新排列")
 
 def 新线程1():
     线程1 = threading.Thread(target=测试全部)
@@ -158,7 +150,7 @@ def 显示右键菜单(事件):
     # 定义按钮点击事件，打印选中的数据名称和按钮名称
     def 点击按钮(按钮名称):
         协议,ip,端口,延迟 = 代理列表[选中索引]
-        代理连接.设置系统代理(ip,端口)
+        添加文本(代理连接.设置系统代理(ip,端口))
 
     # 创建右键菜单
     右键菜单 = tk.Menu(主窗口, tearoff=0)
@@ -175,6 +167,7 @@ def 获取新的代理():
     按钮2.config(state="disabled")
     代理获取.下载代理文件("临时代理文件.txt")
     按钮2.config(state="normal")
+    添加文本("/代理已获取----")
 
 def 测试全部():
     global 代理列表
@@ -194,9 +187,8 @@ def 测试全部():
     刷新列表()
     按钮1.config(state="normal")
     按钮2.config(state="normal")
-
-线程2 = threading.Thread(target=日志内容)
-线程2.start()
+    添加文本(f"可用列表: {代理列表}")
+    添加文本("测试完成!!")
 
 async def 测试代理异步(列表名):
     代理列表 = await 代理测试异步.测试代理(列表名)
