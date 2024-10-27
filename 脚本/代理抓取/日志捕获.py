@@ -46,3 +46,12 @@ if __name__ == '__main__':
     
     # 打印捕获的内容
     print("捕获的日志内容:\n", 日志内容)
+
+    print("1")
+    print("2")
+    print("3")
+
+    日志内容 = 停止捕获日志(output, original_stdout, original_stderr)
+    
+    # 打印捕获的内容
+    print("捕获的日志内容:\n", 日志内容)

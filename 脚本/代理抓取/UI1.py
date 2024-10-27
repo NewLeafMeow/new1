@@ -7,10 +7,24 @@ import 代理获取
 import 代理测试异步
 import 日志捕获
 import 代理连接
+import sys
+import ctypes
 import os
 
 # 设置工作目录为脚本所在的目录
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+# 检查是否具有管理员权限
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
+if not is_admin():
+    # 重新启动程序以获取管理员权限
+    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+    sys.exit()
 
 代理列表=[]
 
@@ -20,7 +34,7 @@ def 刷新列表():
     for 索引, 元组 in enumerate(代理列表):  # 示例数据
         协议, ip, 端口, 延迟 = 元组
         数据列表.insert(tk.END, f"{索引+1}|\t{协议}://{ip}:{端口}---延迟:{延迟}")
-
+    print("列表已刷新")
 
 def 保存代理列表(文件名='代理文件.txt'):
     global 代理列表
@@ -30,6 +44,7 @@ def 保存代理列表(文件名='代理文件.txt'):
             # 将协议、IP、端口和延迟格式化为字符串
             行 = f"{协议}://{ip}:{端口}---延迟:{延迟}\n"
             文件.write(行)  # 写入文件
+    print("已记录")
 
 def 添加文本(内容):
     # 允许文本框修改
@@ -47,12 +62,25 @@ def 添加文本(内容):
 def 日志内容():
     while 1:
         a,b,c=日志捕获.开始捕获日志()
-        time.sleep(0.1)
+        time.sleep(1)
         i=日志捕获.停止捕获日志(a, b, c)
         if i:
             添加文本(f"日志内容：{i}")
 
-        
+def 排序():
+    global 代理列表
+    代理列表 = sorted(代理列表, key=lambda x: int(x[-1]))
+    保存代理列表()
+    刷新列表()
+
+def 新线程1():
+    线程1 = threading.Thread(target=测试全部)
+    线程1.start()
+    
+def 新线程3():
+    线程3 = threading.Thread(target=获取新的代理)
+    线程3.start()
+
 代理列表=代理获取.完整读取("代理文件.txt")
 
 # 创建主窗口
@@ -65,11 +93,14 @@ def 日志内容():
 顶部框架.pack(side=tk.TOP, fill=tk.X)
 
 # 添加两个按钮到菜单栏
-按钮1 = tk.Button(顶部框架, text="获取新的代理", command=lambda: 线程3.start())
+按钮1 = tk.Button(顶部框架, text="获取新的代理", command=lambda: 新线程3())
 按钮1.pack(side=tk.LEFT, padx=5, pady=5)
 
-按钮2 = tk.Button(顶部框架, text="测试全部", command=lambda: 线程1.start())
+按钮2 = tk.Button(顶部框架, text="测试全部", command=lambda: 新线程1())
 按钮2.pack(side=tk.LEFT, padx=5, pady=5)
+
+按钮3 = tk.Button(顶部框架, text="排序", command=lambda: 排序())
+按钮3.pack(side=tk.LEFT, padx=5, pady=5)
 
 # 创建一个可调整的主框架，分为左右两部分
 主框架 = tk.PanedWindow(主窗口, orient=tk.HORIZONTAL)
@@ -126,7 +157,6 @@ def 显示右键菜单(事件):
 
     # 定义按钮点击事件，打印选中的数据名称和按钮名称
     def 点击按钮(按钮名称):
-        print(f"数据名称:{选中数据}, 按钮名称: {按钮名称}")
         协议,ip,端口,延迟 = 代理列表[选中索引]
         代理连接.设置系统代理(ip,端口)
 
@@ -149,6 +179,7 @@ def 获取新的代理():
 def 测试全部():
     global 代理列表
     按钮1.config(state="disabled")
+    按钮2.config(state="disabled")
     
     临时代理列表 = 代理获取.读取代理信息("临时代理文件.txt")
     临时代理列表 = asyncio.run(测试代理异步(临时代理列表))
@@ -162,14 +193,17 @@ def 测试全部():
     保存代理列表()
     刷新列表()
     按钮1.config(state="normal")
+    按钮2.config(state="normal")
 
-线程1 = threading.Thread(target=测试全部)
 线程2 = threading.Thread(target=日志内容)
 线程2.start()
-线程3 = threading.Thread(target=获取新的代理)
 
 async def 测试代理异步(列表名):
     代理列表 = await 代理测试异步.测试代理(列表名)
     return 代理列表
 
 主窗口.mainloop()
+
+代理连接.关闭系统代理()
+
+sys.exit()
