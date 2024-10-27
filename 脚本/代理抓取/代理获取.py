@@ -12,7 +12,7 @@ def 下载代理文件(文件名):
     try:
         响应 = requests.get(下载网址)
         响应.raise_for_status()  # 检查请求是否成功
-        with open(文件名, 'wb') as 文件:
+        with open(文件名, 'w') as 文件:
             文件.write(响应.content)
         print(f"文件已下载并保存为: {文件名}")
     except Exception as e:
