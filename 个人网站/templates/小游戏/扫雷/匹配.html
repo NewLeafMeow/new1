@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>扫雷匹配</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .btn-match {
+            background-color: #007bff;
+            color: #fff;
+            font-size: 1.2rem;
+            padding: 15px 30px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-match:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .btn-match:active {
+            background-color: #004085;
+            transform: translateY(2px);
+        }
+
+        .btn-match:focus {
+            outline: none;
+        }
+    </style>
+    <!-- 引入Socket.IO客户端 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>点击按钮开始匹配</h1>
+        <button class="btn-match" onclick="startMatch()">开始匹配</button>
+    </div>
+
+</body>
+<script>
+    // 连接到Socket.IO服务器
+    const socket = io('http://127.0.0.1:5001/game扫雷');  // 请确保URL是你的服务器地址
+
+    // 点击匹配按钮时发送匹配请求
+    function startMatch() {
+        // 发送一个 'start_match' 事件到服务器
+        socket.emit('start_match', {
+            user_id: 'current_user.id',  // 传递玩家的信息
+            user_name: 'current_user.username'
+        });
+
+        // 给用户反馈，提示匹配中
+        alert('正在匹配...');
+
+        // 在匹配开始后，跳转到扫雷游戏页面
+        window.location.href = '/小游戏/扫雷';
+    }
+
+    // 监听服务器返回的匹配状态
+    socket.on('match_status', (data) => {
+        alert(data.status);  // 根据服务器发来的状态更新前端的内容
+    });
+
+    // 监听匹配成功的事件
+    socket.on('match_success', (data) => {
+        alert('匹配成功！游戏开始！');
+        console.log(data);  // 打印房间信息和玩家数据
+        // 你可以在这里处理匹配成功后的界面跳转或者其他逻辑
+    });
+</script>
+
+</html>

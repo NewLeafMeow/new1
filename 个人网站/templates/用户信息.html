@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户信息</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .account-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .avatar-container {
+            margin-right: 20px;
+        }
+
+        .avatar-container img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+        }
+
+        .account-info div {
+            font-size: 16px;
+        }
+
+        .account-info .username,
+        .account-info .account {
+            margin: 5px 0;
+        }
+
+        .account-info .register-time {
+            margin-top: 10px;
+            color: #777;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+        }
+
+        .btn-danger {
+            background-color: #f44336;
+        }
+
+        .btn-danger:hover {
+            background-color: #da190b;
+        }
+
+        /* 背景遮罩和弹出框样式 */
+        #edit-info {
+            background-color: rgba(0, 0, 0, 0.5);
+            /* 半透明背景 */
+            position: fixed;
+            /* 固定位置 */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        #edit-info form {
+            background-color: white;
+            /* 表单背景 */
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+            min-width: 300px;
+        }
+
+        #edit-info form div {
+            margin-bottom: 20px;
+        }
+
+        #edit-info label {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        #edit-info input[type="text"],
+        #edit-info input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        #edit-info input[type="text"]:focus,
+        #edit-info input[type="password"]:focus {
+            border-color: #0056b3;
+            outline: none;
+        }
+
+        #edit-info button {
+            background-color: #0056b3;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #edit-info button:hover {
+            background-color: #004085;
+        }
+
+        #edit-info .btn {
+            margin-right: 10px;
+        }
+
+        /* 取消按钮样式 */
+        #edit-info .btn {
+            background-color: #ccc;
+            color: #333;
+            font-size: 14px;
+        }
+
+        #edit-info .btn:hover {
+            background-color: #bbb;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="account-info">
+            <div class="avatar-container" onclick="document.getElementById('avatar-input').click()">
+                <img src="{{ url_for('static', filename='头像/' + (current_user.avatar if current_user.avatar else '默认.jpg')) }}"
+                    alt="头像" id="avatar">
+            </div>
+            <form id="avatar-form" action="{{ url_for('update_avatar') }}" method="POST" enctype="multipart/form-data"
+                style="display: none;">
+                <input type="file" id="avatar-input" name="avatar" accept="image/*" onchange="submitAvatarForm()">
+            </form>
+            <div>
+                <div class="username">用户名：{{ current_user.username if current_user.is_authenticated else '-请登录-' }}
+                </div>
+                <div class="account">账号：{{ current_user.id if current_user.is_authenticated else '-请登录-' }}</div>
+                <div class="register-time">注册时间：{{ current_user.register_date if current_user.is_authenticated else
+                    '-请登录-' }}</div>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button class="btn" onclick="toggleEditInfo()">修改信息</button>
+            <button class="btn btn-danger" onclick="window.location.href='/注销'">注销</button>
+        </div>
+
+        <!-- 修改信息模块（默认隐藏） -->
+        <div id="edit-info" style="display: none;">
+            <form id="edit-info-form" method="POST" action="/修改信息">
+                <div>
+                    <label for="username">用户名:</label>
+                    <input type="text" id="username" name="用户名" value="{{ current_user.username }}" required
+                        maxlength="8" placeholder="用户名最多8位">
+                    <small>用户名不得超过8个字符</small>
+                </div>
+                <div>
+                    <label for="password">密码:</label>
+                    <input type="password" id="password" name="密码" placeholder="请输入新密码" required minlength="6"
+                        maxlength="20">
+                    <small>密码不得少于6个字符</small>
+                </div>
+                <div>
+                    <button type="submit" class="btn">保存修改</button>
+                    <button type="button" class="btn" onclick="toggleEditInfo()">取消</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</body>
+<script>
+    // 当文件选择变化时，自动提交表单
+    function submitAvatarForm() {
+        document.getElementById('avatar-form').submit();
+    }
+
+    function toggleEditInfo() {
+        // 切换显示修改信息模块
+        const editInfo = document.getElementById('edit-info');
+        if (editInfo.style.display === "none") {
+            editInfo.style.display = "block";
+        } else {
+            editInfo.style.display = "none";
+        }
+    }
+
+    document.getElementById('edit-info-form').addEventListener('submit', function (event) {
+        var username = document.getElementById('username').value;
+        var password = document.getElementById('password').value;
+
+        // 检查用户名长度
+        if (username.length > 8) {
+            alert('用户名最多只能输入8个字符');
+            event.preventDefault(); // 阻止表单提交
+            return false;
+        }
+
+        // 检查密码长度
+        if (password.length < 6) {
+            alert('密码不得少于6个字符');
+            event.preventDefault(); // 阻止表单提交
+            return false;
+        }
+
+        return true; // 如果没有错误，表单可以提交
+    });
+</script>
+
+</html>

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="个人网站首页，展示个人项目与信息，包含游戏开发、网站构建等内容。">
+    <meta name="keywords" content="个人网站, 游戏开发, 网站建设, 个人项目">
+
+    <title>个人网站首页</title>
+    <style>
+        /* 载入时 */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* 效果 */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-size: 400% 400%;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #444;
+            padding: 15px 20px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            margin: 0 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            position: relative;
+        }
+
+        nav a:hover {
+            background-color: #555;
+        }
+
+        nav a::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background-color: #4CAF50;
+            bottom: 0;
+            left: 0;
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+            transform-origin: bottom right;
+        }
+
+        nav a:hover::before {
+            transform: scaleX(1);
+            transform-origin: bottom left;
+        }
+
+        .account-info {
+            display: flex;
+            align-items: center;
+            color: white;
+        }
+
+        .avatar-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .avatar-container img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            /* 使头像为圆形 */
+            transition: border 0.3s ease;
+            /* 平滑过渡 */
+            box-sizing: border-box;
+            /* 确保边框不影响整体大小 */
+        }
+
+        .avatar-container:hover img {
+            border: 5px solid #4CAF50;
+            /* 鼠标移入时给头像加上绿色圆形边框 */
+        }
+
+        /* 鼠标移入时显示提示文字 */
+        .avatar-container:hover::after {
+            content: "点击修改";
+            /* 提示文字 */
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .account-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .account-info div {
+            text-align: left;
+        }
+
+        .account-info .username {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .account-info .account {
+            font-size: 12px;
+            color: #ccc;
+        }
+
+        .hero {
+            background-image: url('https://via.placeholder.com/1600x600'), linear-gradient(30deg, white, rgb(0, 0, 0), #6c6c6c);
+            background-size: cover, 400% 400%;
+            /* 为渐变设置较大的背景尺寸 */
+            background-blend-mode: overlay;
+            /* 使渐变和图片融合 */
+            color: white;
+            padding: 120px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: background-color 0.3s ease;
+            animation: gradientBackground 5s ease infinite;
+        }
+
+        @keyframes gradientBackground {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* 使用伪元素加深背景图片 */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.1);
+            /* 初始透明度 */
+            transition: background-color 0.3s ease;
+            z-index: 0;
+            /* 确保背景层位于内容下面 */
+        }
+
+        .hero h1 {
+            font-size: 50px;
+            margin: 0;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 1;
+            /* 确保文字位于背景层之上 */
+        }
+
+        .hero p {
+            font-size: 20px;
+            margin-top: 10px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+            /* 确保文字位于背景层之上 */
+        }
+
+        /* 鼠标移入时加深背景 */
+        .hero:hover::before {
+            background-color: rgba(251, 124, 255, 0.4);
+            /* 加深背景色 */
+        }
+
+        .mouse-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .mouse-effect .circle {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.5);
+            pointer-events: none;
+            transform: scale(0);
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+
+        /* 鼠标移入时的整体效果 */
+        .hero:hover .mouse-effect {
+            opacity: 1;
+        }
+
+        .content {
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .content h2 {
+            font-size: 36px;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .content p {
+            font-size: 18px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .projects {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+
+        .project-card {
+            position: relative;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 280px;
+            padding: 20px;
+            text-align: left;
+            overflow: hidden;
+            transition: transform 0.3s ease-in-out;
+            /* 使放大效果平滑 */
+        }
+
+        .project-card h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .project-card:hover {
+            transform: scale(1.05);
+            /* 放大效果 */
+        }
+
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 15px;
+        }
+
+        footer p {
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .content h2 {
+                font-size: 28px;
+            }
+
+            .projects {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .project-card {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loader">
+        <div class="spinner"></div>
+    </div>
+    <header>
+        <h1>欢迎来到我的个人网站</h1>
+    </header>
+
+    <nav>
+        <div class="account-info">
+            <div class="avatar-container">
+                <img src="{{ url_for('static', filename='头像/' + (current_user.avatar if current_user.avatar else '默认.jpg')) }}"
+                    alt="头像" id="avatar">
+            </div>
+            <div>
+                <div class="username">用户名：{{ current_user.username if current_user.is_authenticated else '-请登录-' }}
+                </div>
+                <div class="account">账号：{{ current_user.id if current_user.is_authenticated else '-请登录-' }}</div>
+            </div>
+        </div>
+        <div>
+            <a href="{{ url_for('login') }}">登录</a>
+            <a href="{{ url_for('register') }}">注册</a>
+            <a href="#">联系我们</a>
+            <a href="#">关于我们</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="mouse-effect"></div>
+        <h1>探索我的世界</h1>
+        <p>欢迎浏览我的个人平台，了解更多关于我的信息和项目。</p>
+    </section>
+
+    <section class="content">
+        <h2>我的最新项目</h2>
+        <p>在这里展示我的一些个人项目，包括游戏开发、网站构建等。我致力于创建有趣且实用的应用程序。</p>
+
+        <div class="projects">
+            <div class="project-card" onclick="window.location.href='/小游戏'">
+                <h3>小游戏</h3>
+                <p>这是一个集合多款经典小游戏的平台，包括益智类、动作类、竞速类等多种类型。无论你是喜欢动脑还是动手，都能找到适合你的挑战。每个游戏都有简单易上手的规则，随时随地都能开启游戏乐趣。</p>
+            </div>
+            <div class="project-card">
+                <h3>项目 2</h3>
+                <p>占位</p>
+            </div>
+            <div class="project-card">
+                <h3>项目 3</h3>
+                <p>占位</p>
+            </div>
+            <div class="project-card">
+                <h3>项目 4</h3>
+                <p>占位</p>
+            </div>
+            <div class="project-card">
+                <h3>项目 5</h3>
+                <p>占位</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2024 我的个人网站 | All Rights Reserved</p>
+    </footer>
+
+</body>
+
+<script>
+    //载入效果
+    window.onload = function () {
+        document.getElementById('loader').style.display = 'none';
+    };
+
+    //路由用户信息
+    document.getElementById('avatar').addEventListener('click', function () {
+        // 在此设置点击后跳转的路由
+        window.location.href = '/用户信息';  // 这里修改为你想跳转的路由
+    });
+
+    //移入效果
+    document.querySelector('.hero').addEventListener('mousemove', function (e) {
+        var mouseEffect = document.querySelector('.mouse-effect');
+        var circle = document.createElement('div');
+        circle.classList.add('circle');
+        mouseEffect.appendChild(circle);
+
+        // 获取鼠标位置
+        var mouseX = e.clientX;
+        var mouseY = e.clientY;
+
+        // 获取 hero 元素的相对位置
+        var heroRect = document.querySelector('.hero').getBoundingClientRect();
+        var offsetX = mouseX - heroRect.left;
+        var offsetY = mouseY - heroRect.top;
+
+        // 设置圆圈的大小和位置
+        var size = Math.random() * 80 + 20; // 随机大小
+        circle.style.width = size + 'px';
+        circle.style.height = size + 'px';
+
+        // 设置圆圈的位置
+        var x = Math.random() * 200 - 100
+        var y = Math.random() * 200 - 100
+        circle.style.left = offsetX + x - size / 2 + 'px'; // 将圆心与鼠标对齐
+        circle.style.top = offsetY + y - size / 2 + 'px';  // 同上
+
+        // 增加扩展效果
+        setTimeout(function () {
+            circle.style.transform = 'scale(1)'; // 放大效果
+            circle.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+        }, 10);
+
+        // 移除圆圈
+        setTimeout(function () {
+            circle.remove();
+        }, 300);
+
+        // 获取标题中的每个字符
+        var text = document.querySelector('.hero h1');
+        var chars = text.textContent.split(''); // 拆分标题为单个字符
+        text.innerHTML = ''; // 清空原始内容
+
+        chars.forEach(function (char) {
+            var span = document.createElement('span');
+            span.textContent = char;
+            text.appendChild(span); // 每个字符用 <span> 包裹
+        });
+    });
+
+    //路由小游戏
+    document.getElementById('game-project-card').addEventListener('click', function () {
+        window.location.href = '/小游戏';
+    });
+</script>
+
+</html>

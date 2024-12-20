@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>匹配系统</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
+</head>
+
+<body>
+    <h1>欢迎来到匹配系统</h1>
+    <button id="matchButton">点击匹配</button>
+    <p id="status"></p>
+
+    <script>
+        // 连接到后台的 Socket.IO 服务器
+        const socket = io.connect('http://localhost:5000');
+
+        // 显示连接状态
+        socket.on('connect', () => {
+            document.getElementById('status').textContent = '已连接，点击“匹配”按钮以开始匹配。';
+        });
+
+        // 监听匹配成功的消息
+        socket.on('match_found', (data) => {
+            document.getElementById('status').textContent = data.message;
+        });
+
+        // 点击“匹配”按钮时，向后台发送匹配请求
+        document.getElementById('matchButton').addEventListener('click', () => {
+            socket.emit('find_match');  // 向后台发送“匹配”请求
+            document.getElementById('status').textContent = '正在匹配中...';
+        });
+    </script>
+</body>
+
+</html>
