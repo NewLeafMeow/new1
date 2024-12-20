@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>扫雷游戏</title>
+    <!-- 引入 Socket.io 库，用于与后端进行 WebSocket 通信 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        /* 样式：设置棋盘的布局，使用网格布局显示每个单元格 */
+        .board {
+            display: grid;
+            grid-template-columns: repeat(10, 40px);
+            /* 10列，每列宽度为40px */
+            grid-gap: 5px;
+            /* 单元格之间的间隙 */
+        }
+
+        /* 样式：单元格的基本样式 */
+        .cell {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ccc;
+            border: 1px solid #888;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* 样式：单元格被揭示后 */
+        .cell.revealed {
+            background-color: #ffffff;
+        }
+
+        /* 样式：标记为旗帜的单元格 */
+        .cell.flag {
+            background-color: #f00;
+        }
+
+        /* 样式：踩到地雷的单元格 */
+        .cell.mined {
+            background-color: red;
+        }
+
+        /* 样式：显示数字的单元格 */
+        .cell.number {
+            background-color: #ffffff;
+        }
+
+        /* 样式：未揭示的单元格 */
+        .cell.unrevealed {
+            background-color: #8f8f8f;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>扫雷游戏</h1>
+    <!-- 显示棋盘 -->
+    <div class="board" id="board"></div>
+
+    <script>
+        // 建立与服务器的 Socket.io 连接
+        const socket = io('http://localhost:5000/game扫雷');
+
+        // 初始化棋盘数据和状态
+        let board = [];
+        let revealed = [];
+        let flags = [];
+        let game_over = false;
+        let game_victory = false;
+
+        // 更新棋盘显示
+        function updateBoard(gameState) {
+            // 更新棋盘、已揭示和旗帜状态
+            board = gameState.board;
+            revealed = gameState.revealed;
+            flags = gameState.flags;
+
+            // 获取棋盘元素
+            const boardElement = document.getElementById('board');
+            boardElement.innerHTML = ''; // 清空当前棋盘
+
+            // 遍历棋盘的每个单元格
+            for (let row = 0; row < board.length; row++) {
+                for (let col = 0; col < board[row].length; col++) {
+                    // 创建一个单元格
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.id = `cell-${row}-${col}`;
+
+                    // 根据单元格状态更新样式
+                    if (revealed[row][col]) {
+                        // 如果单元格已被揭示
+                        cell.classList.add('revealed');
+                        if (board[row][col] === -1) {
+                            // 地雷
+                            cell.textContent = '💣';
+                            cell.classList.add('mined');
+                        } else if (board[row][col] > 0) {
+                            // 显示邻近地雷的数字
+                            cell.textContent = board[row][col];
+                            cell.classList.add('number');
+                        }
+                    } else {
+                        // 未揭示的单元格
+                        cell.classList.add('unrevealed');
+                    }
+
+                    // 标记旗帜
+                    if (flags[row][col]) {
+                        cell.classList.add('flag');
+                        cell.textContent = '🚩';
+                    }
+
+                    // 添加点击事件，揭示单元格
+                    cell.addEventListener('click', () => {
+                        if (!revealed[row][col] && !game_over) {
+                            socket.emit('reveal_cell', { row, col });  // 发送揭示格子的请求
+                        }
+                    });
+
+                    // 添加双击事件，揭示全部单元格
+                    cell.addEventListener('dblclick', () => {
+                        if (revealed[row][col] && !game_over) {
+                            socket.emit('reveal_all_cell', { row, col });  // 发送揭示格子的请求
+                        }
+                    });
+
+
+                    // 添加右键点击事件，标记或取消旗帜
+                    cell.addEventListener('contextmenu', (event) => {
+                        event.preventDefault(); // 阻止默认的右键菜单
+                        if (!revealed[row][col] && !game_over) {
+                            socket.emit('flag_cell', { row, col });  // 发送标记旗帜的请求
+                        }
+                    });
+
+                    // 将单元格添加到棋盘
+                    boardElement.appendChild(cell);
+                }
+            }
+        }
+
+        // 监听从服务器接收到的游戏状态更新
+        socket.on('game_state', (gameState) => {
+            console.log('接收到的游戏状态:', gameState);
+            updateBoard(gameState);  // 更新棋盘显示
+
+            // 游戏结束判断
+            if (gameState.game_over) {
+                game_over = true;
+                alert('游戏结束！你踩到地雷了。');
+            }
+
+            // 游戏胜利判断
+            if (gameState.game_victory && !game_victory) {
+                game_victory = true;
+                alert('游戏胜利');
+            }
+        });
+
+        // 监听连接成功事件
+        socket.on('connect', () => {
+            console.log('已连接到服务器');
+        });
+    </script>
+</body>
+
+</html>
