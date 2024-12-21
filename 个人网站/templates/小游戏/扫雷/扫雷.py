@@ -1,8 +1,8 @@
 from flask import Flask, render_template, request
 from flask_cors import CORS
 import random
-from flask_socketio import SocketIO, Namespace, emit
-from 房间分配 import Player,RoomManager
+from flask_socketio import SocketIO, Namespace, emit , join_room, leave_room
+import time
 
 app扫雷 = Flask(__name__)
 socketio = SocketIO(app扫雷, cors_allowed_origins="*")  # 允许所有来源访问
@@ -22,61 +22,52 @@ class GameNamespace(Namespace):
 ##################################################################################
     # 匹配——房间分配——连接/断开事件
 
-    #初始化棋盘
-    def generate_board(self):
-        """
-        生成一个初始棋盘，包括地雷分布、揭示状态和旗帜状态
-        """
-        board = [[0 for _ in range(self.BOARD_SIZE)] for _ in range(self.BOARD_SIZE)]
-        revealed = [[False for _ in range(self.BOARD_SIZE)] for _ in range(self.BOARD_SIZE)]
-        flags = [[False for _ in range(self.BOARD_SIZE)] for _ in range(self.BOARD_SIZE)]
-        return board, revealed, flags
-
     # 添加新玩家
-    def add_player(self):
+    def add_player(self , user_id , user_name , user_avatar):
         """
         添加一个新的玩家数据，使用 request.sid 作为键
         """
         self.player_data[request.sid] = {
-            'user_id': current_user.id,  # 账号
-            'user_name': current_user.username,  # 用户名
-            'user_avatar': current_user.avatar if current_user.avatar else '默认.jpg',  # 头像
+            'user_id': user_id,  # 账号
+            'user_name': user_name,  # 用户名
+            'user_avatar': user_avatar,  # 头像
             'board_size': 10,  # 棋盘大小
             'mines': 10,  # 地雷数量
             'game_started': False,  # 游戏是否已经开始
             'game_over': False,  # 游戏是否失败
             'game_victory': False,  # 游戏是否胜利
-            'board': None,  # 棋盘数据
-            'revealed': None,  # 揭示状态
-            'flags': None,  # 旗帜状态
+            'board': [[0 for _ in range(10)] for _ in range(10)],  # 初始化棋盘，全部为 0
+            'revealed': [[False for _ in range(10)] for _ in range(10)],  # 初始化揭示状态
+            'flags': [[False for _ in range(10)] for _ in range(10)],  # 初始化旗帜状态
         }
-
-        # 初始化棋盘数据
-        self.player_data[request.sid]['board'], self.player_data[request.sid]['revealed'], self.player_data[request.sid]['flags'] = self.generate_board()
-
 
     # 监听前台连接事件
     def on_connect(self):
         """监听玩家连接事件"""
-        print(f"玩家 {request.sid} 已连接")
-        # 在玩家连接时添加玩家数据
-        self.add_player()
+        print(f"++++++++ {request.sid} 已连接")
 
 
     # 监听匹配请求
-    def on_start_match(self):
+    def on_start_match(self , data):
         """
         监听玩家发起匹配请求，
         如果有两个玩家匹配成功，就将他们分配到同一个房间，
         并通知前台进行倒计时。
         """
+
+        user_id,user_name,user_avatar=data['user_id'],data['user_name'],data['user_avatar']
+        self.add_player(user_id,user_name,user_avatar)
         print(f"玩家 {request.sid} 开始匹配，数据: {self.player_data.get(request.sid)}")
 
         # 向当前玩家发送匹配中的提示
-        socketio.emit('match_status', {'status': '匹配中...'}, to=request.sid)
+        emit('match_status', to=request.sid)
 
         # 将玩家数据加入等待队列
-        self.waiting_players.append({'sid': request.sid, 'data': self.player_data.get(request.sid)})
+        # 检查 sid 是否已经存在于 waiting_players 中
+        if not any(player['sid'] == request.sid for player in self.waiting_players):
+            self.waiting_players.append({'sid': request.sid, 'data': self.player_data.get(request.sid)})
+        else:
+            print(request.sid,'重复加入')
 
         # 检查队列中是否有两名玩家可以进行匹配
         if len(self.waiting_players) >= 2:
@@ -100,16 +91,16 @@ class GameNamespace(Namespace):
                 player1['sid'],player2['sid']
             }
 
-            print(f"房间 {room_id} 匹配成功: 玩家1 {player1['data']}, 玩家2 {player2['data']}")
+            print(f"房间 {self.rooms_data}")
 
             # 通知玩家匹配成功，开始 3 秒倒计时
             for i in range(3, 0, -1):
-                socketio.emit('match_status', {'status': f'匹配成功，{i} 秒后开始游戏'}, room=room_id)
+                emit('match_success', {'status': f'匹配成功，{i} 秒后开始游戏'}, room=room_id)
                 time.sleep(1)  # 模拟倒计时
 
             # 倒计时结束，发送匹配完成消息
-            socketio.emit('match_success', {'room': room_id, 'players': [player1['data'], player2['data']]}, room=room_id)
             print(f"房间 {room_id} 倒计时结束，开始游戏！")
+            self.send()
 
 
     # 监听断开连接事件
@@ -130,12 +121,13 @@ class GameNamespace(Namespace):
             if player_sid in room_data:
                 # 如果玩家是房间中的玩家，移除该玩家并删除房间数据
                 leave_room(room_id, sid=player_sid)
-                del room_data[player_sid]
+                self.rooms_data[room_id].remove(player_sid)
                 print(f"玩家 {player_sid} 从房间 {room_id} 中被移除")
 
                 # 如果房间没有玩家了，删除该房间
                 if not room_data:
                     del self.rooms_data[room_id]
+                    print(f"房间 {self.rooms_data}")
                 break
 
         # 从玩家数据字典中删除该玩家的数据
@@ -221,7 +213,7 @@ class GameNamespace(Namespace):
         """
         直接发送玩家字典给当前连接的玩家
         """
-        emit('player_data', self.player_data[request.sid], to=request.sid)  # 直接发送玩家字典
+        emit('match_status', self.player_data[request.sid], to=request.sid)  # 直接发送玩家字典
 
     def openwhite(self):
         """

@@ -171,8 +171,7 @@
     <div class="container">
         <div class="account-info">
             <div class="avatar-container" onclick="document.getElementById('avatar-input').click()">
-                <img src="{{ url_for('static', filename='头像/' + (current_user.avatar if current_user.avatar else '默认.jpg')) }}"
-                    alt="头像" id="avatar">
+                <img src="{{ url_for('static', filename='头像/' + current_user.avatar) }}" alt="头像" id="avatar">
             </div>
             <form id="avatar-form" action="{{ url_for('update_avatar') }}" method="POST" enctype="multipart/form-data"
                 style="display: none;">

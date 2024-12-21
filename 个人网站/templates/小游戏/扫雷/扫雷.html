@@ -150,7 +150,7 @@
             updateBoard(gameState);  // 更新棋盘显示
 
             // 游戏结束判断
-            if (gameState.game_over) {
+            if (gameState['game_over']) {
                 game_over = true;
                 alert('游戏结束！你踩到地雷了。');
             }

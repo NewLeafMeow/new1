@@ -42,6 +42,11 @@ class User(UserMixin):
         self.register_date = register_date
         self.avatar = avatar
 
+# 监听前台连接事件
+def on_connect(self):
+    """监听玩家连接事件"""
+    print(f"++++++++ {request.sid} 已连接")
+
 # 加载用户的函数
 @login_manager.user_loader
 def load_user(user_id):

@@ -348,8 +348,7 @@
     <nav>
         <div class="account-info">
             <div class="avatar-container">
-                <img src="{{ url_for('static', filename='头像/' + (current_user.avatar if current_user.avatar else '默认.jpg')) }}"
-                    alt="头像" id="avatar">
+                <img src="{{ url_for('static', filename='头像/' + current_user.avatar) }}" alt="头像" id="avatar">
             </div>
             <div>
                 <div class="username">用户名：{{ current_user.username if current_user.is_authenticated else '-请登录-' }}
