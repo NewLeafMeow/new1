@@ -6,10 +6,11 @@ from flask_socketio import SocketIO, Namespace, emit
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user, logout_user
 from werkzeug.utils import secure_filename
 import os
+import hashlib
 
 app路由 = Flask(__name__)
 socketio = SocketIO(app路由, cors_allowed_origins="*")  # 允许所有来源访问
-app路由.secret_key = 'your_secret_key'  # 替换为一个独一无二且安全的字符串
+app路由.secret_key = 'your_secret_key'  # 安全的字符串
 
 # MySQL 配置
 db_config = {
@@ -66,7 +67,7 @@ def index():
 def register():
     if request.method == 'POST':
         账号 = request.form['账号']
-        密码 = request.form['密码']
+        密码 = hashlib.sha256(request.form['密码'].encode()).hexdigest()
         用户名 = request.form['用户名']
         
         # 数据库插入
@@ -104,7 +105,7 @@ def login():
     if request.method == 'POST':
         # 获取前端提交的数据
         账号 = request.form['账号']
-        密码 = request.form['密码']
+        密码 = hashlib.sha256(request.form['密码'].encode()).hexdigest()
 
         # 连接数据库并查询
         try:
@@ -201,7 +202,7 @@ def update_avatar():
 @login_required
 def update_user_info():
     用户名 = request.form.get('用户名')
-    密码 = request.form.get('密码')
+    密码 = hashlib.sha256(request.form['密码'].encode()).hexdigest()
 
     # 连接数据库
     connection = get_db_connection()
